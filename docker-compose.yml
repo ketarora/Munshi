@@ -1,0 +1,33 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      MUNSHI_ENV: demo
+      MUNSHI_DB: /data/munshi.db
+      MUNSHI_HOST: 0.0.0.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - munshi-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: http://127.0.0.1:8000
+        NEXT_PUBLIC_MUNSHI_TOKEN: demo-child-token
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  munshi-data:
